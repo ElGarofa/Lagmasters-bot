@@ -1,42 +1,50 @@
 const wppconnect = require('@wppconnect-team/wppconnect');
 
 wppconnect.create({
-  session: 'lagmasters'
+  session: 'lagmasters',
+  headless: true,
+  puppeteerOptions: {
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  }
 })
 .then((client) => start(client))
 .catch((error) => console.log(error));
 
 function start(client) {
 
-  client.onParticipantsChanged(async (event) => {
+  console.log("BOT LAG MASTERS INICIADO");
 
-  const grupo = event.chatId;
-  const usuario = event.who;
+  client.onMessage((message) => {
 
-  if (event.action === 'add') {
+    if (message.body === '!clan') {
+      client.sendText(message.from,
+      `🚀 *Lag Masters*
 
-    await client.sendText(grupo,
-`🚀 Bienvenido a *Lag Masters*
+Clan competitivo de Rocket League Sideswipe.
 
-@${usuario.split('@')[0]}
+Links:
+🌐 Web: (tu web)
+💬 Discord: (tu discord)
+🔥 WhatsApp: grupo oficial
 
-Clan de Rocket League Sideswipe
-Usa !clan para ver info`,
-{
-  mentions: [usuario]
-});
+¡Con lag pero con estilo!`);
+    }
 
-  }
+    if (message.body === '!discord') {
+      client.sendText(message.from,
+      "💬 Discord del clan:\n(link de discord)");
+    }
 
-  if (event.action === 'remove') {
+    if (message.body === '!torneo') {
+      client.sendText(message.from,
+      "🏆 Próximo torneo del clan pronto...");
+    }
 
-    await client.sendText(grupo,
-`👋 Un jugador salió del clan.
+    if (message.body === '!clip') {
+      client.sendText(message.from,
+      "🎥 Mira nuestros clips en TikTok!");
+    }
 
-Lag Masters sigue creciendo 🚀`);
-
-  }
-
-});
+  });
 
 }
