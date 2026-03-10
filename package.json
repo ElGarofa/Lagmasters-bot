@@ -1,21 +1,13 @@
 {
   "name": "lagmasters-bot",
   "version": "1.0.0",
-  "description": "Bot de WhatsApp para el clan Lag Masters",
+  "description": "Bot WhatsApp Lag Masters",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"
   },
-  "keywords": [
-    "whatsapp",
-    "bot",
-    "lagmasters"
-  ],
-  "author": "Lag Masters",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "@wppconnect-team/wppconnect": "^1.41.0",
-    "puppeteer": "^23.0.0"
+    "@whiskeysockets/baileys": "^6.7.8",
+    "qrcode-terminal": "^0.12.0"
   }
 }

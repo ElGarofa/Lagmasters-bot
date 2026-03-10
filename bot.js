@@ -1,50 +1,38 @@
-const wppconnect = require('@wppconnect-team/wppconnect');
+const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys")
+const qrcode = require("qrcode-terminal")
 
-wppconnect.create({
-  session: 'lagmasters',
-  headless: true,
-  puppeteerOptions: {
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  }
+async function startBot(){
+
+const { state, saveCreds } = await useMultiFileAuthState("auth")
+
+const sock = makeWASocket({
+auth: state
 })
-.then((client) => start(client))
-.catch((error) => console.log(error));
 
-function start(client) {
+sock.ev.on("creds.update", saveCreds)
 
-  console.log("BOT LAG MASTERS INICIADO");
+sock.ev.on("connection.update", (update)=>{
+const { qr } = update
 
-  client.onMessage((message) => {
+if(qr){
+qrcode.generate(qr,{small:true})
+}
+})
 
-    if (message.body === '!clan') {
-      client.sendText(message.from,
-      `🚀 *Lag Masters*
+sock.ev.on("messages.upsert", ({messages})=>{
 
-Clan competitivo de Rocket League Sideswipe.
+const msg = messages[0]
 
-Links:
-🌐 Web: (tu web)
-💬 Discord: (tu discord)
-🔥 WhatsApp: grupo oficial
+if(!msg.message) return
 
-¡Con lag pero con estilo!`);
-    }
+const text = msg.message.conversation || ""
 
-    if (message.body === '!discord') {
-      client.sendText(message.from,
-      "💬 Discord del clan:\n(link de discord)");
-    }
+if(text === "!clan"){
+sock.sendMessage(msg.key.remoteJid,{text:"🚀 Lag Masters\nClan competitivo"})
+}
 
-    if (message.body === '!torneo') {
-      client.sendText(message.from,
-      "🏆 Próximo torneo del clan pronto...");
-    }
-
-    if (message.body === '!clip') {
-      client.sendText(message.from,
-      "🎥 Mira nuestros clips en TikTok!");
-    }
-
-  });
+})
 
 }
+
+startBot()
