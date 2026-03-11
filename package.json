@@ -1,14 +1,14 @@
 {
   "name": "lagmasters-bot",
   "version": "1.0.0",
-  "description": "Bot WhatsApp LagMasters",
+  "description": "LagMasters Bot para WhatsApp",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.7.5",
-    "pino": "^8.0.0"
+    "@whiskeysockets/baileys": "^6.9.4",
+    "qrcode-terminal": "^0.12.0"
   }
 }

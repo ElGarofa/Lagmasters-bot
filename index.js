@@ -1,10 +1,9 @@
-import { connectBot } from "./src/connection.js";
+import { connectBot } from "./connection.js";
 
 async function start() {
-    console.log("🚀 Iniciando bot LagMasters...");
-
-    const sock = await connectBot();
-
+    console.clear();
+    console.log("🚀 Iniciando LagMasters Bot...");
+    await connectBot();
 }
 
 start();
