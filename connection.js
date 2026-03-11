@@ -7,7 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { TEMP_DIR, WAWEB_VERSION, PREFIX } from "./config.js";
+import { TEMP_DIR, WAWEB_VERSION, PREFIX } from "./src/config.js";
 import { load } from "./loader.js";
 import { badMacHandler } from "./utils/badMacHandler.js";
 import { bannerLog, successLog, infoLog, warningLog, errorLog } from "./utils/logger.js";

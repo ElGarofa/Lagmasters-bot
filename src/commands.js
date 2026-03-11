@@ -1,4 +1,4 @@
-import { PREFIX } from "../config.js";
+import { PREFIX } from "./config.js";
 
 export async function handleCommands(sock, msg) {
 
