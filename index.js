@@ -1,5 +1,6 @@
 // index.js
 import { connectBot } from "./connection.js";
+import { connectBot } from "./config.js";
 import { load } from "./loader.js";
 import { badMacHandler } from "./utils/badMacHandler.js";
 import { bannerLog, errorLog, infoLog, warningLog } from "./utils/logger.js";
