@@ -1,9 +1,8 @@
-import makeWASocket, { useMultiFileAuthState } from "@whiskeysockets/baileys"
-import qrcode from "qrcode-terminal"
+import makeWASocket, { useMultiFileAuthState, DisconnectReason } from "@whiskeysockets/baileys"
 
 export async function connectBot() {
 
-const { state, saveCreds } = await useMultiFileAuthState("./auth")
+const { state, saveCreds } = await useMultiFileAuthState("auth")
 
 const sock = makeWASocket({
 auth: state
@@ -11,31 +10,24 @@ auth: state
 
 sock.ev.on("creds.update", saveCreds)
 
-sock.ev.on("connection.update", ({ connection, qr }) => {
+sock.ev.on("connection.update", (update) => {
 
-if(qr){
-console.log("Escanea el QR:")
-qrcode.generate(qr, { small: true })
+const { connection, qr } = update
+
+if (qr) {
+console.log("📱 Escanea este QR en WhatsApp")
+console.log(qr)
 }
 
-if(connection === "open"){
-console.log("✅ Bot conectado")
+if (connection === "open") {
+console.log("✅ Bot conectado a WhatsApp")
 }
 
-if(connection === "close"){
+if (connection === "close") {
 console.log("❌ Conexión cerrada")
 }
 
 })
 
-sock.ev.on("messages.upsert", ({ messages }) => {
-
-const msg = messages[0]
-
-if(!msg.message) return
-
-console.log("📩 Mensaje recibido")
-
-})
-
+return sock
 }
