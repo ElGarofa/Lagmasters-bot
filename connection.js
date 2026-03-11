@@ -1,58 +1,61 @@
-import makeWASocket, { useMultiFileAuthState } from "@whiskeysockets/baileys";
-import qrcode from "qrcode-terminal";
-import fs from "fs";
-import path from "path";
-import { welcomeMessage, exitMessage } from "./messages.js";
-import { handleCommands } from "./commands/clan.js";
+// connection.js
+import makeWASocket, {
+  useMultiFileAuthState,
+  DisconnectReason
+} from "@whiskeysockets/baileys";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const AUTH_DIR = path.resolve("./auth");
+import { TEMP_DIR, WAWEB_VERSION, PREFIX } from "./config.js";
+import { load } from "./loader.js";
+import { badMacHandler } from "./utils/badMacHandler.js";
+import { bannerLog, successLog, infoLog, warningLog, errorLog } from "./utils/logger.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Crear carpeta temporal si no existe
+if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
 
 export async function connectBot() {
-    const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
+  const authFolder = path.resolve(__dirname, "..", "assets", "auth");
 
-    const sock = makeWASocket({
-        auth: state,
-        printQRInTerminal: false
-    });
+  // Estado de autenticación
+  const { state, saveCreds } = await useMultiFileAuthState(authFolder);
 
-    sock.ev.on("creds.update", saveCreds);
+  const socket = makeWASocket({
+    version: WAWEB_VERSION,
+    auth: state,
+    printQRInTerminal: true, // Opcional si querés ver QR en consola
+    connectTimeoutMs: 20_000,
+    keepAliveIntervalMs: 30_000,
+  });
 
-    sock.ev.on("connection.update", (update) => {
-        const { connection, qr } = update;
+  // Guardar credenciales
+  socket.ev.on("creds.update", saveCreds);
 
-        if (qr) {
-            console.log("📲 Escaneá este QR con WhatsApp:");
-            qrcode.generate(qr, { small: true });
-        }
+  // Eventos de conexión
+  socket.ev.on("connection.update", async (update) => {
+    const { connection, lastDisconnect } = update;
 
-        if (connection === "open") {
-            console.log("✅ LagMasters Bot conectado correctamente!");
-        }
+    if (connection === "close") {
+      const code = lastDisconnect?.error?.output?.statusCode;
+      warningLog(`Conexión cerrada. Status: ${code}`);
+      if (lastDisconnect?.error?.toString().includes("Bad MAC")) {
+        warningLog("Bad MAC detectado. Limpiando credenciales...");
+        badMacHandler.clearProblematicSessionFiles();
+      }
+      // Reintentar reconexión
+      setTimeout(connectBot, 5000);
+    } else if (connection === "open") {
+      bannerLog();
+      successLog("✅ Bot LagMasters conectado!");
+      infoLog(`Prefix: ${PREFIX}`);
+    } else if (connection === "connecting") {
+      infoLog("Conectando...");
+    }
+  });
 
-        if (connection === "close") {
-            console.log("❌ Conexión cerrada. Reconectando...");
-            connectBot();
-        }
-    });
-
-    // Mensajes entrantes
-    sock.ev.on("messages.upsert", async ({ messages }) => {
-        const msg = messages[0];
-        if (!msg.message || msg.key.fromMe) return;
-
-        const text = msg.message?.conversation || "";
-        const sender = msg.key.participant || msg.key.remoteJid;
-
-        // Bienvenida y despedida
-        if (text === "joined") {
-            await sock.sendMessage(msg.key.remoteJid, { text: welcomeMessage.replace("@member", sender) });
-        } else if (text === "left") {
-            await sock.sendMessage(msg.key.remoteJid, { text: exitMessage.replace("@member", sender) });
-        }
-
-        // Comandos
-        await handleCommands(sock, msg, text);
-    });
-
-    return sock;
+  return socket;
 }
