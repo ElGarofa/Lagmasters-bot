@@ -1,54 +1,41 @@
-import makeWASocket, {
-  useMultiFileAuthState,
-  DisconnectReason
-} from "@whiskeysockets/baileys";
-
-import { bannerLog, successLog, infoLog, warningLog } from "./utils/logger.js";
-import { load } from "./loader.js";
+import makeWASocket, { useMultiFileAuthState } from "@whiskeysockets/baileys"
+import qrcode from "qrcode-terminal"
 
 export async function connectBot() {
 
-  const { state, saveCreds } = await useMultiFileAuthState("./auth");
+const { state, saveCreds } = await useMultiFileAuthState("./auth")
 
-  const socket = makeWASocket({
-    auth: state,
-    printQRInTerminal: true
-  });
+const sock = makeWASocket({
+auth: state
+})
 
-  socket.ev.on("creds.update", saveCreds);
+sock.ev.on("creds.update", saveCreds)
 
-  socket.ev.on("connection.update", (update) => {
+sock.ev.on("connection.update", ({ connection, qr }) => {
 
-    const { connection, lastDisconnect } = update;
+if(qr){
+console.log("Escanea el QR:")
+qrcode.generate(qr, { small: true })
+}
 
-    if (connection === "open") {
+if(connection === "open"){
+console.log("✅ Bot conectado")
+}
 
-      bannerLog();
-      successLog("Bot LagMasters conectado!");
+if(connection === "close"){
+console.log("❌ Conexión cerrada")
+}
 
-    }
+})
 
-    if (connection === "close") {
+sock.ev.on("messages.upsert", ({ messages }) => {
 
-      const shouldReconnect =
-        lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+const msg = messages[0]
 
-      warningLog("Conexión cerrada");
+if(!msg.message) return
 
-      if (shouldReconnect) {
-        connectBot();
-      }
+console.log("📩 Mensaje recibido")
 
-    }
-
-    if (connection === "connecting") {
-      infoLog("Conectando...");
-    }
-
-  });
-
-  load(socket);
-
-  return socket;
+})
 
 }
